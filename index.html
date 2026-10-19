@@ -53,48 +53,82 @@ input[type=number]:placeholder-shown{background:#fff3c4;border-color:#e5b800}
 .pk button small{display:block;color:var(--mu);font-weight:600;font-size:12px;margin-top:2px}
 .pk button.on{border-color:var(--g);background:#effaf1}
 #tt{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:#111827;color:#fff;border-radius:18px;padding:8px 16px;font-weight:700;font-size:13px;z-index:300;display:none;max-width:90vw;text-align:center}
+.wl{display:grid;gap:14px;margin-top:10px}.wl button{border:3px solid var(--c);background:#fff;border-radius:18px;padding:26px 14px;font-weight:800;font-size:24px;color:var(--c);cursor:pointer;text-align:center}.wl button small{display:block;color:var(--mu);font-weight:600;font-size:13px;margin-top:4px}
+#bq{margin-bottom:6px}#bl{max-height:60vh;overflow:auto}
 </style></head><body>
 <div class="bn"><span class="t">📦 INVENTARIO</span><button id="cfgb" class="vb" data-a="cambiar" style="display:none">⚙ Cambiar</button></div>
 <div id="app"></div><div id="md" class="md"></div><div id="tt"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* URL_API vacío = MODO DE PRUEBA (datos solo en este navegador). Pega aquí la URL de la aplicación web de Apps Script (termina en /exec). */
-const URL_API='';
+const URL_API='https://script.google.com/macros/s/AKfycbyvNaHycL5skG5FEwKROiQMBzKG1H3iKsq2HKqsnGzn9p8qBOAQpNc9vhuhsoMYk5bz/exec';
 const PREF_DEF='FER.TI';
 const $=s=>document.querySelector(s),E=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ls=(k,v)=>{try{if(v===undefined)return JSON.parse(localStorage.getItem(k)||'null');localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}};
 const fm=x=>x===''||x==null?'—':x;
-let S=ls('inv_cfg')||{},TAB='contar',REV=null,LOOK=0,CUR=null,HIST=ls('inv_hist')||[],PICK=S.conteo||0;
+let S=ls('inv_cfg')||{},TAB='contar',REV=null,LOOK=0,CUR=null,HIST=ls('inv_hist')||[],PICK=S.conteo||0,SCR=(S.nombre&&S.conteo)?'main':'welcome',NAMES=ls('inv_names')||{},MCL=[],LASTIMG='';
 const colC=()=>S.conteo==2?'#2563eb':'#0a8f2a';
 function toast(t){const e=$('#tt');e.textContent=t;e.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display='none',2200)}
-function modal(h,col){const m=$('#md');m.innerHTML='<div class="mc" style="--c:'+(col||'#0e9a22')+'">'+h+'</div>';m.style.display='flex'}
+function modal(h,col,wide){const m=$('#md');m.innerHTML='<div class="mc" style="--c:'+(col||'#0e9a22')+(wide?';max-width:980px':'')+'">'+h+'</div>';m.style.display='flex'}
 function cerrar(){$('#md').style.display='none';$('#md').innerHTML=''}
 function msg(t){const m=$('#mm');if(m)m.textContent=t}
 function normCode(raw){const v=String(raw||'').trim().toUpperCase().replace(/\s+/g,'');if(!v)return '';
  let m=v.match(/^([A-Z]{3}\.[A-Z]{2})\.?(\d{1,6})$/);if(m)return m[1]+'.'+m[2].padStart(6,'0');
- if(/^\d{1,6}$/.test(v))return (S.prefijo||PREF_DEF)+'.'+v.padStart(6,'0');return v}
+ if(/^\d{1,6}$/.test(v))return S.prefijo?S.prefijo+'.'+v.padStart(6,'0'):'';return v}
 
 /* ===== API ===== */
 async function api(a,d){d=d||{};if(!URL_API)return demo(a,d);
- try{let r;if(a=='buscar'||a=='resumen'||a=='ping')r=await fetch(URL_API+'?'+new URLSearchParams({accion:a,...d}));
+ try{let r;if(['buscar','resumen','ping','misconteos','previa'].includes(a))r=await fetch(URL_API+'?'+new URLSearchParams({accion:a,...d}));
   else r=await fetch(URL_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({accion:a,...d})});
   return await r.json()}catch(e){return{ok:false,error:'Sin conexión con la hoja. Revisa tu internet e inténtalo otra vez.'}}}
 
 /* ===== Pantallas ===== */
-function setupH(){return '<h1>Inventario</h1><p class="sub">Antes de empezar</p><div class="card">'
- +'<label>Tu nombre<input id="sn" type="text" maxlength="60" value="'+E(S.nombre||'')+'" placeholder="Nombre y apellido" autocomplete="off"></label>'
- +'<label>¿Qué conteo haces?</label><div class="pk"><button data-a="pick" data-v="1" class="'+(PICK==1?'on':'')+'">🅰️ Conteo 1<small>Asesor A</small></button><button data-a="pick" data-v="2" class="'+(PICK==2?'on':'')+'">🅱️ Conteo 2<small>Asesor B</small></button></div>'
- +'<label>Código que se está contando</label><div class="cf"><div><small>Familia (3 letras)</small><input id="sf" type="text" maxlength="3" value="'+E((S.prefijo||PREF_DEF).split('.')[0])+'" placeholder="FER" autocomplete="off"></div><b>.</b><div><small>Subfamilia (2 letras)</small><input id="ss" type="text" maxlength="2" value="'+E((S.prefijo||PREF_DEF).split('.')[1])+'" placeholder="TI" autocomplete="off"></div></div>'
- +'<p class="ds" style="font-size:12.5px;margin-bottom:0">Con esto solo escribes los 6 últimos dígitos del código.</p><div id="mm" class="ms"></div>'
- +'<button class="bt big" data-a="empezar">Empezar</button></div>'}
-function contarH(){return '<div class="card"><label style="margin-top:0">Código (6 dígitos)</label><div class="cw"><span>'+E(S.prefijo||PREF_DEF)+'.</span><input id="cod" type="text" inputmode="numeric" maxlength="20" placeholder="002828" autocomplete="off"></div><div id="res"></div></div>'
- +(HIST.length?'<h3>Mis últimos registros</h3>'+HIST.map(x=>'<div class="tr hl" data-a="recargar" data-v="'+E(x.c)+'"><div class="in"><b>'+E(x.c)+'</b> · '+E(x.d)+'<small>Cantidad '+E(x.q)+' · Fallados '+E(x.f)+' · toca para corregir</small></div>✏️</div>').join(''):'')}
-function R(){const a=$('#app');$('#cfgb').style.display=S.nombre?'block':'none';
- if(!S.nombre){a.innerHTML=setupH();return}
+function welcomeH(){const b=n=>'<button data-a="asesor" data-v="'+n+'" style="--c:'+(n==2?'#2563eb':'#0a8f2a')+'"><span>'+(n==2?'🅱️':'🅰️')+' Asesor '+n+'</span><small>Conteo '+n+(NAMES[n]?' · '+E(NAMES[n]):'')+'</small></button>';
+ return '<h1>Inventario</h1><p class="sub">Bienvenido, ¿quién va a contar?</p><div class="wl">'+b(1)+b(2)+'</div>'}
+function nameH(){return '<h1>'+(PICK==2?'🅱️':'🅰️')+' Asesor '+PICK+'</h1><p class="sub">Conteo '+PICK+'</p><div class="card"><label style="margin-top:0">Tu nombre<input id="sn" type="text" maxlength="60" value="'+E(NAMES[PICK]||'')+'" placeholder="Nombre y apellido" autocomplete="off"></label><div id="mm" class="ms"></div><button class="bt big" data-a="entrar">Entrar</button><button class="bt big w" data-a="cambiar">← Volver</button></div>'}
+function contarH(){if(!S.prefijo)S.prefijo=PREF_DEF;const p=S.prefijo.split('.');
+ return '<div class="card"><label style="margin-top:0">Familia y subfamilia</label><div class="cf"><div><small>Familia (3 letras)</small><input id="fam" type="text" maxlength="3" value="'+E(p[0])+'" placeholder="FER" autocomplete="off"></div><b>.</b><div><small>Subfamilia (2 letras)</small><input id="sub" type="text" maxlength="2" value="'+E(p[1])+'" placeholder="AA" autocomplete="off"></div></div></div>'
+ +'<div class="card"><label style="margin-top:0">Código (6 dígitos)</label><div class="cw"><span id="pfx">'+E(S.prefijo)+'.</span><input id="cod" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="002828" autocomplete="off"></div><div id="res"></div></div>'
+ +(HIST.length?'<h3>Mis últimos registros</h3>'+HIST.map(x=>'<div class="tr hl" data-a="irA" data-v="'+E(x.c)+'"><div class="in"><b>'+E(x.c)+'</b> · '+E(x.d)+'<small>Cantidad '+E(x.q)+' · Fallados '+E(x.f)+' · toca para corregir</small></div>✏️</div>').join(''):'')}
+function R(){const a=$('#app');$('#cfgb').style.display=SCR=='main'?'block':'none';
+ if(SCR=='welcome'){a.innerHTML=welcomeH();return}
+ if(SCR=='name'){a.innerHTML=nameH();setTimeout(()=>{const i=$('#sn');if(i)i.focus()},50);return}
  let h='<div class="top"><span class="chip" style="--c:'+colC()+'">Conteo '+S.conteo+'</span><span class="ttl">'+E(S.nombre)+'</span></div>'+(!URL_API?'<div class="demo">🧪 Modo de prueba: los datos solo se guardan en este navegador.</div>':'')
-  +'<div class="tabs"><button data-a="tab" data-v="contar" class="'+(TAB=='contar'?'on':'')+'">✍️ Contar</button><button data-a="tab" data-v="rev" class="'+(TAB=='rev'?'on':'')+'">🔎 Revisión</button></div>';
+  +'<div class="tabs"><button data-a="tab" data-v="contar" class="'+(TAB=='contar'?'on':'')+'">✍️ Contar</button><button data-a="tab" data-v="rev" class="'+(TAB=='rev'?'on':'')+'">🔎 Revisión</button></div>'
+  +'<div class="mbar" style="margin-bottom:12px"><button class="bt s w" data-a="misc">📋 Mis conteos</button><button class="bt s w" data-a="previa">🖼 Vista previa Excel</button></div>';
  if(TAB=='contar'){a.innerHTML=h+contarH();setTimeout(()=>{const i=$('#cod');if(i)i.focus()},50)}
  else{a.innerHTML=h+'<div id="rv"></div>';loadRev()}}
+
+/* ===== Mis conteos (buscador) ===== */
+const nq=s=>String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+async function abrirMC(){const X='<button class="x" data-a="cerrar">✕</button><h3>📋 Mis conteos';
+ modal(X+'</h3><div class="emp">Cargando…</div>',colC());
+ const r=await api('misconteos',{conteo:S.conteo});
+ if(!r.ok){modal(X+'</h3><div class="bad">'+E(r.error||'No se pudo cargar.')+'</div>',colC());return}
+ MCL=r.items||[];modal(X+' ('+MCL.length+')</h3><input id="bq" type="text" placeholder="Buscar por código o descripción…" autocomplete="off"><div id="bl"></div>',colC());renderMC('');setTimeout(()=>{const i=$('#bq');if(i)i.focus()},50)}
+function renderMC(q){const b=$('#bl');if(!b)return;const ws=nq(q).split(/\s+/).filter(Boolean),L=MCL.filter(x=>{const t=nq(x.codigo+' '+x.descripcion);return ws.every(w=>t.includes(w))});
+ b.innerHTML=L.length?L.slice(0,150).map(x=>'<div class="tr hl" data-a="irA" data-v="'+E(x.codigo)+'"><div class="in"><b>'+E(x.codigo)+'</b> · '+E(x.descripcion)+'<small>Cantidad '+E(x.cantidad)+' · Fallados '+E(x.fallados)+' · '+E(x.udm||'')+'</small></div>✏️</div>').join('')+(L.length>150?'<div class="emp">Mostrando 150 de '+L.length+'. Escribe para filtrar.</div>':''):'<div class="emp">Sin resultados</div>'}
+function irA(code){cerrar();const m=String(code).match(/^([A-Z]{3})\.([A-Z]{2})\.(\d{6})$/);if(m){S.prefijo=m[1]+'.'+m[2];ls('inv_cfg',S)}
+ TAB='contar';R();$('#cod').value=String(code).split('.').pop();buscar(code);window.scrollTo(0,0)}
+
+/* ===== Vista previa de la hoja (imagen) ===== */
+async function previa(){toast('Armando vista previa…');const r=await api('previa');
+ if(!r.ok){toast(r.error||'No se pudo generar.');return}
+ const d=r.datos||[],X='<button class="x" data-a="cerrar">✕</button><h3>🖼 Vista previa de la hoja</h3>';
+ if(!d.length){modal(X+'<p class="ds">Aún no hay códigos conciliados en la hoja «Para copiar al excel».</p>',colC());return}
+ LASTIMG=dibujar(d.slice(0,500));
+ modal(X+'<p class="ds">'+d.length+' filas'+(d.length>500?' (se muestran las primeras 500)':'')+'. Es solo una imagen de referencia.</p><div style="overflow:auto;border:2px solid var(--bd);border-radius:10px"><img src="'+LASTIMG+'" style="display:block;width:100%;min-width:640px"></div><div class="fx"><button class="bt w" data-a="cerrar">Cerrar</button><button class="bt" data-a="bajarimg">⬇ Descargar PNG</button></div>',colC(),true)}
+function dibujar(d){const cab=['Número','Codigo','Descripcion','UDM','Conteo','Fallados','Total'],W=[70,150,400,70,90,90,90],RH=34,tw=W.reduce((a,b)=>a+b,0),H=RH*(d.length+1),
+ sc=Math.max(.5,Math.min(2,Math.sqrt(14e6/(tw*H)),30000/H)),cv=document.createElement('canvas');cv.width=Math.round(tw*sc);cv.height=Math.round(H*sc);
+ const g=cv.getContext('2d');g.scale(sc,sc);g.fillStyle='#fff';g.fillRect(0,0,tw,H);g.textBaseline='middle';
+ const T=['#fde2e4','#dff0e3','#dbe7fd','#fff1c4','#eadcf7','#d5eff5','#ffe3cc','#e8f0c8'],X=[0];W.forEach((w,i)=>X.push(X[i]+w));
+ const fit=(t,w)=>{t=String(t==null?'':t);if(g.measureText(t).width<=w)return t;while(t.length&&g.measureText(t+'…').width>w)t=t.slice(0,-1);return t+'…'};
+ [cab].concat(d).forEach((row,r)=>{const y=r*RH;g.fillStyle=r?T[(r-1)%T.length]:'#c9dedc';g.fillRect(0,y,tw,RH);g.fillStyle='#13302a';g.font=(r?'':'bold ')+'14px Arial,sans-serif';
+  row.forEach((v,c)=>{const al=r&&[0,4,5,6].includes(c);g.textAlign=al?'right':'left';g.fillText(fit(v,W[c]-16),al?X[c+1]-8:X[c]+8,y+RH/2)})});
+ g.strokeStyle='#6f827c';g.lineWidth=1;g.beginPath();
+ for(let r=0;r<=d.length+1;r++){const y=r==d.length+1?H-.5:r*RH+.5;g.moveTo(0,y);g.lineTo(tw,y)}
+ for(let c=0;c<=W.length;c++){const x=c==W.length?tw-.5:X[c]+.5;g.moveTo(x,0);g.lineTo(x,H)}
+ g.stroke();return cv.toDataURL('image/png')}
 
 /* ===== Contar ===== */
 async function buscar(code){if(!code)return;const t=++LOOK,res=$('#res');CUR=null;res.innerHTML='<div class="emp">Buscando…</div>';
@@ -148,13 +182,16 @@ async function gen(forzar){toast('Generando…');
 /* ===== Eventos ===== */
 document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t){if(e.target.id=='md')cerrar();return}
  const a=t.dataset.a,v=t.dataset.v;
- if(a=='pick'){PICK=+v;document.querySelectorAll('.pk button').forEach(b=>b.classList.toggle('on',b.dataset.v==v))}
- else if(a=='empezar'){const n=$('#sn').value.trim(),fa=$('#sf').value.trim().toUpperCase(),su=$('#ss').value.trim().toUpperCase(),p=fa+'.'+su;if(!n){msg('Escribe tu nombre.');return}if(!PICK){msg('Elige Conteo 1 o Conteo 2.');return}if(!/^[A-Z]{3}$/.test(fa)||!/^[A-Z]{2}$/.test(su)){msg('Familia: 3 letras. Subfamilia: 2 letras.');return}
-  if(S.conteo!=PICK||S.nombre!=n)HIST=[];ls('inv_hist',HIST);S={nombre:n,conteo:PICK,prefijo:p};ls('inv_cfg',S);TAB='contar';R()}
- else if(a=='cambiar'){S.nombre='';PICK=S.conteo||0;R()}
+ if(a=='asesor'){PICK=+v;SCR='name';R()}
+ else if(a=='entrar'){const n=$('#sn').value.trim();if(!n){msg('Escribe tu nombre.');return}NAMES[PICK]=n;ls('inv_names',NAMES);
+  if(S.conteo!=PICK||S.nombre!=n){HIST=[];ls('inv_hist',HIST)}S={nombre:n,conteo:PICK,prefijo:S.prefijo||PREF_DEF};ls('inv_cfg',S);SCR='main';TAB='contar';R()}
+ else if(a=='cambiar'){SCR='welcome';R()}
+ else if(a=='misc')abrirMC()
+ else if(a=='previa')previa()
+ else if(a=='bajarimg'){const l=document.createElement('a');l.href=LASTIMG;l.download='Vista_previa_inventario.png';document.body.appendChild(l);l.click();l.remove()}
  else if(a=='tab'){TAB=v;R()}
  else if(a=='guardar')guardar()
- else if(a=='recargar'){const i=$('#cod');i.value=v.split('.').pop();buscar(v);window.scrollTo(0,0)}
+ else if(a=='irA')irA(v)
  else if(a=='refrescar')loadRev()
  else if(a=='resolver')resolverM(v)
  else if(a=='guardarres')guardarRes(v)
@@ -162,13 +199,22 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t
  else if(a=='redescargar'){if(LASTX)descargar(LASTX.d,LASTX.n)}
  else if(a=='genforzar')gen(true)
  else if(a=='cerrar')cerrar()});
-document.addEventListener('input',e=>{if(e.target.id=='sf'||e.target.id=='ss')e.target.value=e.target.value.replace(/[^A-Za-z]/g,'').toUpperCase();
- if(e.target.id=='cod'){const v=e.target.value.trim();CUR=null;
- if(/^\d{6}$/.test(v)||/^[A-Za-z]{3}\.[A-Za-z]{2}\.\d{6}$/.test(v))buscar(normCode(v));else{LOOK++;$('#res').innerHTML=''}}});
+document.addEventListener('input',e=>{const id=e.target.id;
+ if(id=='fam'||id=='sub'){e.target.value=e.target.value.replace(/[^A-Za-z]/g,'').toUpperCase();
+  const f=$('#fam').value,u=$('#sub').value,ok=f.length==3&&u.length==2;S.prefijo=ok?f+'.'+u:'';ls('inv_cfg',S);$('#pfx').textContent=(f||'???')+'.'+(u||'??')+'.';
+  CUR=null;LOOK++;$('#res').innerHTML='';
+  if(id=='fam'&&f.length==3)$('#sub').focus();
+  else if(id=='sub'&&ok){const c=$('#cod');c.focus();if(/^\d{6}$/.test(c.value))buscar(normCode(c.value))}
+  return}
+ if(id=='cod'){const v=e.target.value=e.target.value.replace(/\D/g,'').slice(0,6);CUR=null;
+  if(v.length==6){if(!S.prefijo){LOOK++;$('#res').innerHTML='<div class="bad" style="margin-top:10px">Completa familia (3 letras) y subfamilia (2 letras).</div>';return}buscar(normCode(v))}
+  else{LOOK++;$('#res').innerHTML=''}}
+ if(id=='bq')renderMC(e.target.value)});
 document.addEventListener('keydown',e=>{
  if(e.key=='Escape')cerrar();
  if(e.key=='Enter'){const id=e.target.id;
   if(id=='cod'){const c=normCode(e.target.value);if(c)buscar(c)}
+  else if(id=='sn'){e.preventDefault();$('[data-a=entrar]').click()}
   else if(id=='qc'){e.preventDefault();$('#qf').focus();$('#qf').select()}
   else if(id=='qf')guardar()
   }});
@@ -183,6 +229,8 @@ function demoSync(a,d){const n=d.conteo==2?2:1;
  if(a=='buscar'){const r=DD[d.codigo];if(!r)return{ok:false,error:'Código no encontrado: '+d.codigo};return{ok:true,codigo:d.codigo,descripcion:r.d,udm:r.u,yaContado:r['c'+n]!=='',cantidad:r['c'+n],fallados:r['f'+n]}}
  if(a=='guardar'){const r=DD[d.codigo];if(!r)return{ok:false,error:'Código no encontrado'};if(r['o'+n]==='')r['o'+n]=Math.max(0,...Object.values(DD).map(x=>+x['o'+n]||0))+1;
   r['c'+n]=d.cantidad;r['f'+n]=d.fallados;r.cf='';r.ff='';dsave();return{ok:true}}
+ if(a=='misconteos')return{ok:true,items:Object.keys(DD).filter(k=>DD[k]['c'+n]!=='').sort((x,y)=>(+DD[y]['o'+n]||0)-(+DD[x]['o'+n]||0)).map(k=>({codigo:k,descripcion:DD[k].d,udm:DD[k].u,cantidad:DD[k]['c'+n],fallados:+(DD[k]['f'+n]||0)}))}
+ if(a=='previa'){const dt=Object.keys(DD).filter(k=>{const e=estD(DD[k]);return e=='OK'||e=='RESUELTO'}).map((k,i)=>{const r=DD[k],e=estD(r),c=e=='OK'?+r.c1:+r.cf,f=e=='OK'?+(r.f1||0):+r.ff;return[i+1,k,r.d,r.u,c,f,c+f]});return{ok:true,datos:dt}}
  if(a=='resumen'){const o={ok:true,contados:0,coinciden:0,resueltos:0,recontar:[],pendientes:[]};
   Object.keys(DD).forEach(k=>{const r=DD[k],e=estD(r);if(!e)return;o.contados++;const b={codigo:k,descripcion:r.d,udm:r.u};
    if(e=='OK')o.coinciden++;else if(e=='RESUELTO')o.resueltos++;
