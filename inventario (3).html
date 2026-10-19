@@ -1,0 +1,197 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Inventario</title>
+<style>
+:root{--g:#10a43a;--gd:#06621c;--tx:#13302a;--mu:#5b6f66;--bd:#d8e6dc;--bg:#f2f7f3}
+*{box-sizing:border-box}
+body{margin:0;padding-top:50px;color:var(--tx);font:15px/1.4 system-ui,"Segoe UI",Arial,sans-serif;background:var(--bg);min-height:100vh}
+button,input,textarea,select{font:inherit}
+#app{max-width:640px;margin:0 auto;padding:16px 14px 80px}
+.bn{position:fixed;top:0;left:0;right:0;z-index:70;height:50px;background:linear-gradient(135deg,#0fb43f,#06821f);color:#fff;font-weight:800;letter-spacing:1px;display:flex;align-items:center;gap:10px;padding:0 12px}
+.bn .t{flex:1;text-align:center;padding-left:70px}
+.vb{background:#fff;color:var(--gd);border:0;border-radius:18px;font-weight:800;font-size:12.5px;padding:6px 12px;cursor:pointer;white-space:nowrap;width:70px;padding:6px 0}
+.bt{border:0;border-radius:12px;padding:10px 14px;font-weight:700;color:#fff;background:var(--g);cursor:pointer}
+.bt.w{background:#fff;color:var(--tx);border:2px solid var(--bd)}.bt.r{background:#e11d48}.bt.s{padding:6px 10px;font-size:12.5px}.bt:disabled{opacity:.6}
+.bt.big{width:100%;padding:14px;font-size:17px;margin-top:12px}
+h1{margin:6px 0 2px;text-align:center;font-size:28px;color:#0b5d1f}
+h3{margin:14px 0 8px;font-size:16px}
+.sub{text-align:center;color:var(--mu);font-weight:600;margin:0 0 16px}
+.top{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.chip{border-radius:18px;padding:5px 14px;font-weight:800;color:#fff;background:var(--c)}
+.ttl{font-size:19px;font-weight:800;flex:1;min-width:120px}
+.demo{background:#fff;border:2px dashed #e5b800;border-radius:10px;padding:6px 12px;font-size:12.5px;font-weight:700;color:#7a5d00;margin-bottom:12px;text-align:center}
+.tabs{display:flex;gap:8px;margin-bottom:12px}.tabs button{flex:1;border:2px solid var(--bd);background:#fff;border-radius:12px;padding:10px;font-weight:800;color:var(--mu);cursor:pointer}.tabs button.on{background:var(--g);border-color:var(--g);color:#fff}
+.card{background:#fff;border:2px solid var(--bd);border-radius:16px;padding:14px;margin-bottom:12px}
+label{display:block;font-weight:700;font-size:12.5px;color:var(--mu);margin-top:10px}
+input[type=text],input[type=password],input[type=number]{width:100%;margin-top:4px;border:2px solid var(--bd);border-radius:10px;padding:11px 12px;background:#fff;color:var(--tx)}
+input:focus{outline:0;border-color:var(--g)}
+input[type=number]:placeholder-shown{background:#fff3c4;border-color:#e5b800}
+.cf{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:end;margin-top:4px}.cf b{font-size:26px;padding-bottom:10px}.cf input{margin-top:2px;text-transform:uppercase;font:800 20px ui-monospace,Consolas,monospace;text-align:center}.cf small{display:block;font-weight:700;font-size:11.5px;color:var(--mu)}
+.cw{display:flex;align-items:center;gap:0;border:2px solid var(--bd);border-radius:12px;background:#fff;margin-top:4px;overflow:hidden}.cw:focus-within{border-color:var(--g)}
+.cw span{background:#effaf1;padding:14px 10px;font:800 18px ui-monospace,Consolas,monospace;color:var(--gd);white-space:nowrap}
+.cw input{border:0;margin:0;border-radius:0;font:800 22px ui-monospace,Consolas,monospace;letter-spacing:1px}
+.cdb{font:800 20px ui-monospace,Consolas,monospace;word-break:break-all}
+.dsc{font-size:16px;font-weight:700;margin:2px 0 6px}
+.tg{display:inline-block;border-radius:12px;padding:2px 11px;background:#0e9a22;color:#fff;font-weight:700;font-size:12px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.two input{font-size:26px;font-weight:800;text-align:center}
+.note{background:#fff8d6;border:2px solid #e5b800;color:#7a5d00;border-radius:10px;padding:6px 10px;font-weight:700;font-size:13px;margin:8px 0}
+.bad{background:#ffe4e9;border:2px solid #e11d48;color:#9f1239;border-radius:10px;padding:10px;font-weight:700}
+.emp{text-align:center;color:var(--mu);font-weight:700;padding:22px 10px;background:#fff;border-radius:14px}
+.ms{min-height:18px;margin-top:8px;font-weight:700;font-size:13px;color:#be123c}
+.tr{display:flex;align-items:center;gap:8px;border:2px solid #e3eee6;border-radius:10px;padding:8px 10px;margin-top:8px;background:#fff}.tr .in{flex:1;font-size:13.5px;min-width:0}.tr small{display:block;color:var(--mu);font-size:12px}
+.tr.hl{cursor:pointer}.err{border-left:6px solid #e11d48}.wt{border-left:6px solid #f58a07}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.chips span{border-radius:14px;padding:4px 11px;font-weight:800;font-size:12.5px;background:#fff;border:2px solid var(--bd)}
+.mbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.dif{color:#e11d48;font-weight:800}
+.md{display:none;position:fixed;inset:0;z-index:100;background:rgba(10,30,20,.55);align-items:center;justify-content:center;padding:12px}
+.mc{position:relative;background:#fff;border-radius:18px;border-top:8px solid var(--c,#0e9a22);max-width:440px;width:100%;padding:18px 20px;max-height:94vh;overflow:auto}
+.mc h3{margin:0 0 6px;font-size:20px;padding-right:30px}
+.ds{color:#33463e;margin:4px 0 10px;font-size:14px}
+.x{position:absolute;right:10px;top:10px;border:0;background:#eef2ef;border-radius:50%;width:30px;height:30px;cursor:pointer;font-weight:900}
+.fx{display:flex;gap:10px;margin-top:14px}.fx .bt{flex:1}
+.pk{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.pk button{border:3px solid var(--bd);background:#fff;border-radius:16px;padding:16px 8px;font-weight:800;font-size:16px;cursor:pointer;color:var(--tx)}
+.pk button small{display:block;color:var(--mu);font-weight:600;font-size:12px;margin-top:2px}
+.pk button.on{border-color:var(--g);background:#effaf1}
+#tt{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:#111827;color:#fff;border-radius:18px;padding:8px 16px;font-weight:700;font-size:13px;z-index:300;display:none;max-width:90vw;text-align:center}
+</style></head><body>
+<div class="bn"><span class="t">📦 INVENTARIO</span><button id="cfgb" class="vb" data-a="cambiar" style="display:none">⚙ Cambiar</button></div>
+<div id="app"></div><div id="md" class="md"></div><div id="tt"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+/* URL_API vacío = MODO DE PRUEBA (datos solo en este navegador). Pega aquí la URL de la aplicación web de Apps Script (termina en /exec). */
+const URL_API='';
+const PREF_DEF='FER.TI';
+const $=s=>document.querySelector(s),E=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ls=(k,v)=>{try{if(v===undefined)return JSON.parse(localStorage.getItem(k)||'null');localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}};
+const fm=x=>x===''||x==null?'—':x;
+let S=ls('inv_cfg')||{},TAB='contar',REV=null,LOOK=0,CUR=null,HIST=ls('inv_hist')||[],PICK=S.conteo||0;
+const colC=()=>S.conteo==2?'#2563eb':'#0a8f2a';
+function toast(t){const e=$('#tt');e.textContent=t;e.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display='none',2200)}
+function modal(h,col){const m=$('#md');m.innerHTML='<div class="mc" style="--c:'+(col||'#0e9a22')+'">'+h+'</div>';m.style.display='flex'}
+function cerrar(){$('#md').style.display='none';$('#md').innerHTML=''}
+function msg(t){const m=$('#mm');if(m)m.textContent=t}
+function normCode(raw){const v=String(raw||'').trim().toUpperCase().replace(/\s+/g,'');if(!v)return '';
+ let m=v.match(/^([A-Z]{3}\.[A-Z]{2})\.?(\d{1,6})$/);if(m)return m[1]+'.'+m[2].padStart(6,'0');
+ if(/^\d{1,6}$/.test(v))return (S.prefijo||PREF_DEF)+'.'+v.padStart(6,'0');return v}
+
+/* ===== API ===== */
+async function api(a,d){d=d||{};if(!URL_API)return demo(a,d);
+ try{let r;if(a=='buscar'||a=='resumen'||a=='ping')r=await fetch(URL_API+'?'+new URLSearchParams({accion:a,...d}));
+  else r=await fetch(URL_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({accion:a,...d})});
+  return await r.json()}catch(e){return{ok:false,error:'Sin conexión con la hoja. Revisa tu internet e inténtalo otra vez.'}}}
+
+/* ===== Pantallas ===== */
+function setupH(){return '<h1>Inventario</h1><p class="sub">Antes de empezar</p><div class="card">'
+ +'<label>Tu nombre<input id="sn" type="text" maxlength="60" value="'+E(S.nombre||'')+'" placeholder="Nombre y apellido" autocomplete="off"></label>'
+ +'<label>¿Qué conteo haces?</label><div class="pk"><button data-a="pick" data-v="1" class="'+(PICK==1?'on':'')+'">🅰️ Conteo 1<small>Asesor A</small></button><button data-a="pick" data-v="2" class="'+(PICK==2?'on':'')+'">🅱️ Conteo 2<small>Asesor B</small></button></div>'
+ +'<label>Código que se está contando</label><div class="cf"><div><small>Familia (3 letras)</small><input id="sf" type="text" maxlength="3" value="'+E((S.prefijo||PREF_DEF).split('.')[0])+'" placeholder="FER" autocomplete="off"></div><b>.</b><div><small>Subfamilia (2 letras)</small><input id="ss" type="text" maxlength="2" value="'+E((S.prefijo||PREF_DEF).split('.')[1])+'" placeholder="TI" autocomplete="off"></div></div>'
+ +'<p class="ds" style="font-size:12.5px;margin-bottom:0">Con esto solo escribes los 6 últimos dígitos del código.</p><div id="mm" class="ms"></div>'
+ +'<button class="bt big" data-a="empezar">Empezar</button></div>'}
+function contarH(){return '<div class="card"><label style="margin-top:0">Código (6 dígitos)</label><div class="cw"><span>'+E(S.prefijo||PREF_DEF)+'.</span><input id="cod" type="text" inputmode="numeric" maxlength="20" placeholder="002828" autocomplete="off"></div><div id="res"></div></div>'
+ +(HIST.length?'<h3>Mis últimos registros</h3>'+HIST.map(x=>'<div class="tr hl" data-a="recargar" data-v="'+E(x.c)+'"><div class="in"><b>'+E(x.c)+'</b> · '+E(x.d)+'<small>Cantidad '+E(x.q)+' · Fallados '+E(x.f)+' · toca para corregir</small></div>✏️</div>').join(''):'')}
+function R(){const a=$('#app');$('#cfgb').style.display=S.nombre?'block':'none';
+ if(!S.nombre){a.innerHTML=setupH();return}
+ let h='<div class="top"><span class="chip" style="--c:'+colC()+'">Conteo '+S.conteo+'</span><span class="ttl">'+E(S.nombre)+'</span></div>'+(!URL_API?'<div class="demo">🧪 Modo de prueba: los datos solo se guardan en este navegador.</div>':'')
+  +'<div class="tabs"><button data-a="tab" data-v="contar" class="'+(TAB=='contar'?'on':'')+'">✍️ Contar</button><button data-a="tab" data-v="rev" class="'+(TAB=='rev'?'on':'')+'">🔎 Revisión</button></div>';
+ if(TAB=='contar'){a.innerHTML=h+contarH();setTimeout(()=>{const i=$('#cod');if(i)i.focus()},50)}
+ else{a.innerHTML=h+'<div id="rv"></div>';loadRev()}}
+
+/* ===== Contar ===== */
+async function buscar(code){if(!code)return;const t=++LOOK,res=$('#res');CUR=null;res.innerHTML='<div class="emp">Buscando…</div>';
+ const r=await api('buscar',{codigo:code,conteo:S.conteo});if(t!=LOOK||!$('#res'))return;
+ if(!r.ok){res.innerHTML='<div class="bad" style="margin-top:10px">'+E(r.error||'No se pudo buscar.')+'</div>';return}
+ CUR=r;res.innerHTML='<div style="margin-top:12px"><div class="cdb">'+E(r.codigo)+'</div><div class="dsc">'+E(r.descripcion)+'</div><span class="tg">UDM: '+E(r.udm||'—')+'</span>'
+  +(r.yaContado?'<div class="note">Ya registraste este código (cantidad '+E(r.cantidad)+', fallados '+E(r.fallados===''?0:r.fallados)+'). Para corregir, escribe de nuevo ambos valores.</div>':'')
+  +'<div class="two"><label>Cantidad<input id="qc" type="number" inputmode="decimal" min="0" step="any" placeholder=" "></label><label>Fallados<input id="qf" type="number" inputmode="decimal" min="0" step="any" placeholder=" "></label></div>'
+  +'<div id="mm" class="ms"></div><button id="gb" class="bt big" data-a="guardar">Guardar ✔</button></div>';
+ const q=$('#qc');q.focus();q.select()}
+async function guardar(){if(!CUR)return;const c=$('#qc').value,f=$('#qf').value;
+ const falt=[];if(c==='')falt.push('Cantidad');if(f==='')falt.push('Fallados');if(falt.length){msg('⚠ Falta llenar: '+falt.join(' y ')+'. Si no hay, escribe 0.');return}
+ if(isNaN(+c)||+c<0||isNaN(+f)||+f<0){msg('Revisa los números: no pueden ser negativos.');return}
+ const b=$('#gb');b.disabled=true;b.textContent='Guardando…';
+ const r=await api('guardar',{codigo:CUR.codigo,conteo:S.conteo,cantidad:+c,fallados:+f,asesor:S.nombre});
+ if(!r.ok){b.disabled=false;b.textContent='Guardar ✔';msg(r.error||'No se pudo guardar.');return}
+ HIST=HIST.filter(x=>x.c!=CUR.codigo);HIST.unshift({c:CUR.codigo,d:CUR.descripcion,q:+c,f:+f});HIST=HIST.slice(0,12);ls('inv_hist',HIST);
+ toast('✅ Guardado '+CUR.codigo);CUR=null;R()}
+
+/* ===== Revisión ===== */
+async function loadRev(){const v=$('#rv');v.innerHTML='<div class="emp">Cargando…</div>';REV=await api('resumen');renderRev()}
+function renderRev(){const r=REV,v=$('#rv');if(!v)return;
+ if(!r||!r.ok){v.innerHTML='<div class="bad">'+E(r&&r.error||'No se pudo cargar.')+'</div>';return}
+ let h='<div class="mbar"><button class="bt s w" data-a="refrescar">🔄 Actualizar</button><button class="bt s" data-a="generar">📤 Generar hoja Resultado</button></div>'
+  +'<div class="chips"><span>Contados: '+r.contados+'</span><span style="color:#06621c">✅ Coinciden: '+r.coinciden+'</span><span style="color:#2563eb">✔ Resueltos: '+r.resueltos+'</span><span style="color:#be123c">⚠ Recontar: '+r.recontar.length+'</span><span style="color:#b45309">⏳ Pendientes: '+r.pendientes.length+'</span></div>';
+ h+='<h3>⚠ Por recontar</h3>'+(r.recontar.length?r.recontar.map(x=>'<div class="tr err"><div class="in"><b>'+E(x.codigo)+'</b> · '+E(x.descripcion)+'<small>Conteo 1: <span class="'+(x.difC?'dif':'')+'">'+fm(x.c1)+'</span> (fallados <span class="'+(x.difF?'dif':'')+'">'+fm(x.f1)+'</span>) · Conteo 2: <span class="'+(x.difC?'dif':'')+'">'+fm(x.c2)+'</span> (fallados <span class="'+(x.difF?'dif':'')+'">'+fm(x.f2)+'</span>)</small></div><button class="bt s" data-a="resolver" data-v="'+E(x.codigo)+'">Resolver</button></div>').join(''):'<div class="emp">Nada por recontar 🎉</div>');
+ h+='<h3>⏳ Falta el otro conteo</h3>'+(r.pendientes.length?r.pendientes.map(x=>'<div class="tr wt"><div class="in"><b>'+E(x.codigo)+'</b> · '+E(x.descripcion)+'<small>Falta el conteo '+x.falta+'</small></div></div>').join(''):'<div class="emp">Sin pendientes</div>');
+ v.innerHTML=h}
+function resolverM(code){const x=REV.recontar.find(y=>y.codigo==code);if(!x)return;
+ modal('<button class="x" data-a="cerrar">✕</button><h3>Resolver reconteo</h3><p class="ds"><b>'+E(x.codigo)+'</b> · '+E(x.descripcion)+'<br>Conteo 1: '+fm(x.c1)+' (fall. '+fm(x.f1)+') · Conteo 2: '+fm(x.c2)+' (fall. '+fm(x.f2)+')</p>'
+  +'<p class="ds">Cuenten juntos otra vez y escriban el valor final acordado.</p><div class="two"><label>Cantidad final<input id="rc" type="number" inputmode="decimal" min="0" step="any" placeholder=" "></label><label>Fallados final<input id="rf" type="number" inputmode="decimal" min="0" step="any" placeholder=" "></label></div><div id="mm" class="ms"></div>'
+  +'<div class="fx"><button class="bt w" data-a="cerrar">Cancelar</button><button class="bt" data-a="guardarres" data-v="'+E(code)+'">Guardar</button></div>','#e11d48');setTimeout(()=>$('#rc').focus(),50)}
+async function guardarRes(code){const c=$('#rc').value,f=$('#rf').value;
+ const fl=[];if(c==='')fl.push('Cantidad');if(f==='')fl.push('Fallados');if(fl.length){msg('⚠ Falta llenar: '+fl.join(' y ')+'. Si no hay, escribe 0.');return}if(isNaN(+c)||+c<0||isNaN(+f)||+f<0){msg('Revisa los números.');return}
+ const r=await api('resolver',{codigo:code,cantidad:+c,fallados:+f});if(!r.ok){msg(r.error||'No se pudo guardar.');return}
+ cerrar();toast('✔ Resuelto '+code);loadRev()}
+let LASTX=null;
+function descargar(datos,nombre){const cab=['Número','Código','Descripción','UDM','Conteo','Fallados','Total'];
+ try{if(window.XLSX){const ws=XLSX.utils.aoa_to_sheet([cab].concat(datos));ws['!cols']=[{wch:8},{wch:16},{wch:50},{wch:8},{wch:10},{wch:10},{wch:10}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Resultado');XLSX.writeFile(wb,nombre+'.xlsx');return true}}catch(e){}
+ const csv='﻿'+[cab].concat(datos).map(r=>r.map(x=>'"'+String(x==null?'':x).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=nombre+'.csv';document.body.appendChild(a);a.click();a.remove();return false}
+async function gen(forzar){toast('Generando…');
+ const r=await api('generar',{forzar:!!forzar});
+ if(r.bloqueado){modal('<button class="x" data-a="cerrar">✕</button><h3>Hay códigos sin conciliar</h3><p class="ds">⚠ '+r.recontar+' por recontar y ⏳ '+r.pendientes+' con un solo conteo.<br>¿Generar igual solo con los <b>'+r.listos+'</b> ya conciliados?</p><div class="fx"><button class="bt w" data-a="cerrar">Volver</button><button class="bt" data-a="genforzar">Generar igual</button></div>','#f58a07');return}
+ if(!r.ok){toast(r.error||'No se pudo generar.');return}
+ const d=new Date(),f=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+ LASTX={d:r.datos||[],n:'Inventario_'+(S.prefijo||'').replace('.','')+'_'+f};
+ const xl=descargar(LASTX.d,LASTX.n);
+ modal('<button class="x" data-a="cerrar">✕</button><h3>✅ Excel generado</h3><p class="ds">Se descargaron <b>'+r.filas+'</b> filas'+(r.excluidos?' ('+r.excluidos+' códigos sin conciliar quedaron fuera)':'')+(xl?'.':' en formato CSV (no cargó el generador de Excel; ábrelo con Excel igual).')+' La hoja «Resultado» de Sheets también quedó actualizada.</p><div class="fx"><button class="bt w" data-a="redescargar">Descargar otra vez</button><button class="bt" data-a="cerrar">Cerrar</button></div>')}
+
+/* ===== Eventos ===== */
+document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t){if(e.target.id=='md')cerrar();return}
+ const a=t.dataset.a,v=t.dataset.v;
+ if(a=='pick'){PICK=+v;document.querySelectorAll('.pk button').forEach(b=>b.classList.toggle('on',b.dataset.v==v))}
+ else if(a=='empezar'){const n=$('#sn').value.trim(),fa=$('#sf').value.trim().toUpperCase(),su=$('#ss').value.trim().toUpperCase(),p=fa+'.'+su;if(!n){msg('Escribe tu nombre.');return}if(!PICK){msg('Elige Conteo 1 o Conteo 2.');return}if(!/^[A-Z]{3}$/.test(fa)||!/^[A-Z]{2}$/.test(su)){msg('Familia: 3 letras. Subfamilia: 2 letras.');return}
+  if(S.conteo!=PICK||S.nombre!=n)HIST=[];ls('inv_hist',HIST);S={nombre:n,conteo:PICK,prefijo:p};ls('inv_cfg',S);TAB='contar';R()}
+ else if(a=='cambiar'){S.nombre='';PICK=S.conteo||0;R()}
+ else if(a=='tab'){TAB=v;R()}
+ else if(a=='guardar')guardar()
+ else if(a=='recargar'){const i=$('#cod');i.value=v.split('.').pop();buscar(v);window.scrollTo(0,0)}
+ else if(a=='refrescar')loadRev()
+ else if(a=='resolver')resolverM(v)
+ else if(a=='guardarres')guardarRes(v)
+ else if(a=='generar')gen(false)
+ else if(a=='redescargar'){if(LASTX)descargar(LASTX.d,LASTX.n)}
+ else if(a=='genforzar')gen(true)
+ else if(a=='cerrar')cerrar()});
+document.addEventListener('input',e=>{if(e.target.id=='sf'||e.target.id=='ss')e.target.value=e.target.value.replace(/[^A-Za-z]/g,'').toUpperCase();
+ if(e.target.id=='cod'){const v=e.target.value.trim();CUR=null;
+ if(/^\d{6}$/.test(v)||/^[A-Za-z]{3}\.[A-Za-z]{2}\.\d{6}$/.test(v))buscar(normCode(v));else{LOOK++;$('#res').innerHTML=''}}});
+document.addEventListener('keydown',e=>{
+ if(e.key=='Escape')cerrar();
+ if(e.key=='Enter'){const id=e.target.id;
+  if(id=='cod'){const c=normCode(e.target.value);if(c)buscar(c)}
+  else if(id=='qc'){e.preventDefault();$('#qf').focus();$('#qf').select()}
+  else if(id=='qf')guardar()
+  }});
+
+/* ===== MODO DE PRUEBA (sin conexión a Sheets) ===== */
+const DEMO_CAT=[['FER.TI.002828','Tirador barra acero inox 128 mm','UND'],['FER.TI.002829','Tirador concha cromado','UND'],['FER.TI.002830','Tirador bola negro','UND'],['FER.TI.002831','Tirador perfil aluminio 160 mm','UND'],['FER.TI.002832','Tirador bronce antiguo 96 mm','PAR']];
+let DD=ls('inv_demo_v1');if(!DD){DD={};DEMO_CAT.forEach(c=>DD[c[0]]={d:c[1],u:c[2],c1:'',c2:'',f1:'',f2:'',cf:'',ff:'',o1:'',o2:''})}
+const dsave=()=>ls('inv_demo_v1',DD);
+const estD=r=>{if(r.cf!==''&&r.ff!=='')return 'RESUELTO';const a=r.c1!=='',b=r.c2!=='';if(!a&&!b)return '';if(!a||!b)return 'PENDIENTE';return(+r.c1==+r.c2&&+(r.f1||0)==+(r.f2||0))?'OK':'RECONTAR'};
+function demo(a,d){return new Promise(res=>setTimeout(()=>res(demoSync(a,d)),250))}
+function demoSync(a,d){const n=d.conteo==2?2:1;
+ if(a=='buscar'){const r=DD[d.codigo];if(!r)return{ok:false,error:'Código no encontrado: '+d.codigo};return{ok:true,codigo:d.codigo,descripcion:r.d,udm:r.u,yaContado:r['c'+n]!=='',cantidad:r['c'+n],fallados:r['f'+n]}}
+ if(a=='guardar'){const r=DD[d.codigo];if(!r)return{ok:false,error:'Código no encontrado'};if(r['o'+n]==='')r['o'+n]=Math.max(0,...Object.values(DD).map(x=>+x['o'+n]||0))+1;
+  r['c'+n]=d.cantidad;r['f'+n]=d.fallados;r.cf='';r.ff='';dsave();return{ok:true}}
+ if(a=='resumen'){const o={ok:true,contados:0,coinciden:0,resueltos:0,recontar:[],pendientes:[]};
+  Object.keys(DD).forEach(k=>{const r=DD[k],e=estD(r);if(!e)return;o.contados++;const b={codigo:k,descripcion:r.d,udm:r.u};
+   if(e=='OK')o.coinciden++;else if(e=='RESUELTO')o.resueltos++;
+   else if(e=='RECONTAR')o.recontar.push({...b,c1:r.c1,f1:+(r.f1||0),c2:r.c2,f2:+(r.f2||0),difC:+r.c1!=+r.c2,difF:+(r.f1||0)!=+(r.f2||0)});
+   else o.pendientes.push({...b,falta:r.c1===''?1:2})});return o}
+ if(a=='resolver'){const r=DD[d.codigo];if(!r)return{ok:false,error:'Código no encontrado'};r.cf=d.cantidad;r.ff=d.fallados;dsave();return{ok:true}}
+ if(a=='generar'){
+  const L=Object.values(DD),rc=L.filter(r=>estD(r)=='RECONTAR').length,pe=L.filter(r=>estD(r)=='PENDIENTE').length,ok=L.filter(r=>{const e=estD(r);return e=='OK'||e=='RESUELTO'}).length;
+  if((rc||pe)&&!d.forzar)return{ok:false,bloqueado:true,recontar:rc,pendientes:pe,listos:ok};const dt=Object.keys(DD).filter(k=>{const e=estD(DD[k]);return e=='OK'||e=='RESUELTO'}).map((k,i)=>{const r=DD[k],e=estD(r),c=e=='OK'?+r.c1:+r.cf,f=e=='OK'?+(r.f1||0):+r.ff;return[i+1,k,r.d,r.u,c,f,c+f]});return{ok:true,filas:ok,excluidos:rc+pe,datos:dt}}
+ return{ok:false,error:'Acción no válida'}}
+R();
+</script></body></html>
